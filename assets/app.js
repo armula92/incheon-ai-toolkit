@@ -374,7 +374,7 @@
         <h1>공공디자인<br>AI 툴킷 <span>for 인천</span></h1>
         <p class="lead">인천 시민 디자인 워크숍을 위한 협력 툴킷입니다. 키오스크에서 메뉴를 고르듯 누구를 위해, 어디에, 무엇을, 어떻게를 차례로 고르면, AI 도우미가 단계마다 선택지를 넓혀 주고 마지막에 하나의 사업 기획안으로 엮어 줍니다.</p>
         <div class="acts"><a class="btn fill" href="#/who">툴킷 시작하기 ›</a><a class="link" href="#/cases">사례로 먼저 보기</a></div>
-        <p class="note">선택지는 인천광역시 공공디자인 진흥계획(중간보고)의 6개 주제, 30개 이슈와 충남 공공팔레트 모델의 Where, Who, What, How 구조를 바탕으로 했습니다. 이 사이트는 시연용 1차 판이며, AI 추천은 규칙 기반 시연입니다.</p>
+        <p class="note">인천광역시 공공디자인 진흥계획 6개 주제, 공공팔레트 모델의 Where, Who, What, How 구조를 바탕으로 시연용 1차 판이며, AI 추천은 규칙 기반 시연입니다.</p>
       </div>
       <div class="loop">${loop.map(([n, img, ic], i) => `<div class="opt ${i === 5 ? "last" : ""}"><span class="dot">${img ? `<img src="${img}" alt="">` : svg(ic)}</span><span class="nm">${i < 5 ? `Step ${i + 1} ` : ""}${n}</span></div>`).join("")}</div>
       <div class="how-to">
