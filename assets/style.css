@@ -7,7 +7,7 @@
 :root{
   --ac:#213F92; --ac-soft:#4A64AE; --ac-light:#B4C2E6; --ac-tint:#EDF0F9;
   --ink:#1D1D1F; --ink2:#515154; --ink3:#86868B; --ln:#D2D2D7; --ln2:#ECECF0; --gr:#F5F5F7;
-  --pad:clamp(20px,3.4vw,48px); --top:64px; --bar:92px;
+  --pad:clamp(20px,3.4vw,48px); --top:64px; --bar:92px; --foot:34px;
   --dot:clamp(88px,7.8vw,118px);
 }
 *{box-sizing:border-box;margin:0;padding:0;border-radius:0}
@@ -31,7 +31,12 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .menu a:hover{color:var(--ink)}
 .menu a.on{color:var(--ac);border-bottom-color:var(--ac)}
 
-#app{height:calc(100dvh - var(--top));position:relative}
+#app{height:calc(100dvh - var(--top) - var(--foot));position:relative}
+
+/* 하단 카피라이트 */
+.foot{height:var(--foot);display:flex;align-items:center;justify-content:center;padding:0 var(--pad);font-size:13px;color:var(--ink3);background:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.foot p{overflow:hidden;text-overflow:ellipsis}
+.foot b{font-weight:700;color:var(--ink2)}
 .screen{height:100%;display:flex;flex-direction:column;animation:in .5s cubic-bezier(.2,.7,.2,1)}
 @keyframes in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 
@@ -208,8 +213,9 @@ table.cred{width:100%;border-collapse:collapse;font-size:15px;table-layout:auto}
 /* 반응형 */
 @media (max-width:980px){
   body{overflow:auto}
-  #app{height:auto;min-height:calc(100dvh - var(--top))}
-  .screen{height:auto;min-height:calc(100dvh - var(--top))}
+  #app{height:auto;min-height:calc(100dvh - var(--top) - var(--foot))}
+  .screen{height:auto;min-height:calc(100dvh - var(--top) - var(--foot))}
+  .foot{height:auto;min-height:var(--foot);padding:10px var(--pad) calc(var(--bar) + 10px);white-space:normal;text-align:center;line-height:1.5}
   .stage{grid-template-columns:1fr;gap:12px}
   .ask{overflow:visible;padding-bottom:4px}
   .ask .lead{margin-bottom:16px}
@@ -251,6 +257,7 @@ table.cred{width:100%;border-collapse:collapse;font-size:15px;table-layout:auto}
   body{overflow:visible;font-size:11pt}
   .top,.prog,.bar,.r-acts,.p-acts,.no-print{display:none!important}
   #app,.screen,.result{height:auto;overflow:visible;padding:0}
+  .foot{height:auto;padding:12px 0 0;justify-content:flex-start}
   .r-dots{margin:0;padding:18px 0}
   .prompt{max-height:none}
 }
