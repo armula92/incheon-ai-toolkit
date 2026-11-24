@@ -1,7 +1,8 @@
 // 공공디자인 AI 툴킷 for 인천: 선택지와 AI 추천 연관 관계
 // 근거: 인천 공공디자인 진흥계획 중간보고(6개 주제, 30개 이슈), 시민디자인단 워크숍 계획안(사용자 × 공간 × 이슈 × 솔루션),
 //       충남 공공팔레트 90(Who 30, Where 11 유형), 광진 협력디자인 툴킷(안). 자료 정리: 자료/툴킷_근거자료.md
-// 연관 목록(where, how, el, themes)은 AI 도우미가 다음 단계 선택지를 추천할 때 쓴다.
+// 연관 목록(where, how, el, themes)은 AI 도우미가 다음 단계 선택지와 기획안의 공간 구성(elements)을 추천할 때 쓴다.
+// 단계는 누구를, 어디에, 무엇을, 어떻게 넷이고(2026-11-24 무엇으로 단계 삭제), 단계마다 「기타」 직접 입력 칸이 있다.
 
 window.TOOLKIT = {
   steps: [
@@ -16,10 +17,7 @@ window.TOOLKIT = {
       rule: "주제 하나, 이슈 하나를 고릅니다" },
     { id: "how", label: "어떻게", en: "How", max: 2, title: "어떤 디자인 전략을 쓸까요?",
       lead: "같은 문제도 전략에 따라 전혀 다른 공간이 됩니다. 공간이 사람의 행동을 어떻게 바꿀지 정하세요.",
-      rule: "최대 2개 / 처음 고른 전략이 사업명에 들어갑니다" },
-    { id: "make", label: "무엇으로", en: "Make", max: 5, title: "공간을 무엇으로 채울까요?",
-      lead: "햄버거에 재료를 담듯 공간을 이룰 요소를 고르세요. 처음 고른 요소가 기획안의 중심이 됩니다.",
-      rule: "최대 5개 / 처음 고른 요소가 기획안의 중심" }
+      rule: "최대 2개 / 처음 고른 전략이 사업명에 들어갑니다" }
   ],
 
   who: [
@@ -209,6 +207,7 @@ window.TOOLKIT = {
   // 48 x 48 선 아이콘 (stroke 2, 각진 끝)
   icons: {
     dot: '<circle cx="24" cy="24" r="6"/>',
+    etc: '<path d="M10 38l3-11L31 9l8 8-18 18z"/><path d="M27 13l8 8M10 38h28"/>',
     doc: '<path d="M12 6h18l8 8v28H12z"/><path d="M30 6v8h8M18 22h14M18 28h14M18 34h9"/>',
     bench: '<path d="M8 20h32M8 26h32M12 26v12M36 26v12M10 20v-6h28v6"/>',
     shade: '<path d="M6 18 24 8l18 10z"/><path d="M12 18v22M36 18v22M8 40h32"/>',
@@ -230,12 +229,12 @@ window.TOOLKIT = {
 
   // 사례 보기: 미리 만든 조합
   cases: [
-    { note: "인천 안전 주제 / 건물 앞 공지를 고령자 쉼터로", s: { who: ["elder", "parent"], where: ["frontyard"], theme: ["safety"], issue: ["safety:0"], how: ["nudge", "rest"], make: ["bench", "floor", "light", "planting"] } },
-    { note: "통학 안전환경 이슈 / 학교 앞 승하차와 대기 공간", s: { who: ["pupil", "parent", "elder"], where: ["schoolzone"], theme: ["safety"], issue: ["safety:1"], how: ["graphic", "nudge"], make: ["floor", "sign", "shade", "bell"] } },
-    { note: "다국어 웨이파인딩 이슈 / 다문화 상점가", s: { who: ["foreign", "tourist"], where: ["market"], theme: ["convenience"], issue: ["convenience:2"], how: ["sign", "graphic"], make: ["sign", "kiosk", "floor", "art"] } },
-    { note: "도서, 취약지 서비스 접근 이슈 / 섬 선착장 대합 공간", s: { who: ["islander", "elder"], where: ["pier"], theme: ["convenience"], issue: ["convenience:4"], how: ["modular", "rest"], make: ["shade", "bench", "kiosk", "sign"] } },
-    { note: "산업지구 안전동선 이슈 / 화물차와 분리된 출퇴근길", s: { who: ["worker", "foreign"], where: ["industrial"], theme: ["safety"], issue: ["safety:2"], how: ["nudge", "shade"], make: ["floor", "sign", "shade", "light"] } },
-    { note: "음영공간 안전경관 이슈 / 고가 하부를 밝은 통로로", s: { who: ["women", "teen"], where: ["underpass"], theme: ["safety"], issue: ["safety:4"], how: ["light", "graphic"], make: ["light", "art", "bell", "floor"] } }
+    { note: "인천 안전 주제 / 건물 앞 공지를 고령자 쉼터로", s: { who: ["elder", "parent"], where: ["frontyard"], theme: ["safety"], issue: ["safety:0"], how: ["nudge", "rest"] } },
+    { note: "통학 안전환경 이슈 / 학교 앞 승하차와 대기 공간", s: { who: ["pupil", "parent", "elder"], where: ["schoolzone"], theme: ["safety"], issue: ["safety:1"], how: ["graphic", "nudge"] } },
+    { note: "다국어 웨이파인딩 이슈 / 다문화 상점가", s: { who: ["foreign", "tourist"], where: ["market"], theme: ["convenience"], issue: ["convenience:2"], how: ["sign", "graphic"] } },
+    { note: "도서, 취약지 서비스 접근 이슈 / 섬 선착장 대합 공간", s: { who: ["islander", "elder"], where: ["pier"], theme: ["convenience"], issue: ["convenience:4"], how: ["modular", "rest"] } },
+    { note: "산업지구 안전동선 이슈 / 화물차와 분리된 출퇴근길", s: { who: ["worker", "foreign"], where: ["industrial"], theme: ["safety"], issue: ["safety:2"], how: ["nudge", "shade"] } },
+    { note: "음영공간 안전경관 이슈 / 고가 하부를 밝은 통로로", s: { who: ["women", "teen"], where: ["underpass"], theme: ["safety"], issue: ["safety:4"], how: ["light", "graphic"] } }
   ],
 
   // 참고 자료
