@@ -72,6 +72,10 @@
   }
   const names = (ids, M) => ids.map((id) => M[id] && M[id].name).filter(Boolean);
   const whoNames = () => [...names(S.who, WHO), X("who")].filter(Boolean);
+  // 앞에서 고른 장소를 자주 쓰는 사람(who.where 목록에서 앞에 있을수록 먼저)
+  const whoForWhere = () => { const w = S.where[0]; if (!w) return [];
+    return T.who.filter((o) => (o.where || []).includes(w)).sort((a, b) => a.where.indexOf(w) - b.where.indexOf(w)).map((o) => o.id).slice(0, 3); };
+  const whereName = () => (S.where[0] && WHERE[S.where[0]] ? WHERE[S.where[0]].name : X("where"));
   const ampOf = () => { const amp = []; S.who.forEach((w) => (WHO[w].amp || []).forEach((a) => !S.who.includes(a) && !amp.includes(a) && amp.push(a))); return amp; };
 
   // 아이콘
@@ -94,10 +98,10 @@
 
   function trayItems() {
     const it = [];
-    S.who.forEach((id) => WHO[id] && it.push({ k: "누구를", n: WHO[id].name, img: photo(WHO[id].photo) }));
-    if (X("who")) it.push({ k: "누구를", n: X("who"), icon: "etc" });
     S.where.forEach((id) => WHERE[id] && it.push({ k: "어디에", n: WHERE[id].name, img: photo(WHERE[id].photo) }));
     if (X("where")) it.push({ k: "어디에", n: X("where"), icon: "etc" });
+    S.who.forEach((id) => WHO[id] && it.push({ k: "누구를", n: WHO[id].name, img: photo(WHO[id].photo) }));
+    if (X("who")) it.push({ k: "누구를", n: X("who"), icon: "etc" });
     const th = TH[S.theme[0]];
     if (th) it.push({ k: "무엇을", n: S.issue[0] ? issueOf(S.issue[0]).name : X("what") || th.name, img: photo(T.themeMeta[th.id].photo) });
     else if (X("what")) it.push({ k: "무엇을", n: X("what"), icon: "etc" });
@@ -141,7 +145,8 @@
     const st = STEPS[stepIndex(id)];
     let opts = "", aiMsg = "", aiBtn = "";
     if (id === "who") {
-      const recs = ampOf().slice(0, 3);
+      const recs = S.who.length ? ampOf().slice(0, 3) : whoForWhere();
+      const wh = whereName();
       opts = T.who.map((o) => optBtn(o, "who", `<img src="${photo(o.photo)}" alt="" loading="lazy">`, S.who, recs)).join("")
         + etcInput("who", "예: 배달 노동자");
       if (S.who.length) {
@@ -149,7 +154,12 @@
         aiMsg = `<b>${esc(m.name)}</b>: ${esc(m.need)}`;
         if (recs.length && S.who.length < st.max) { aiMsg += `<br><span class="think">같은 공간을 함께 쓰는 <b>${esc(andList(names(recs, WHO)))}</b>도 함께 생각해 보면 어떨까요?</span>`; aiBtn = `<button class="btn" data-ai="who">AI 추천 대상 더하기</button>`; }
       } else if (X("who")) aiMsg = `<b>${esc(X("who"))}</b>: 목록에 없는 대상입니다. 이 사람의 하루와 불편을 모둠에서 먼저 이야기해 보세요.<br><span class="think">같은 공간을 함께 쓰는 사람을 목록에서 더 골라도 됩니다.</span>`;
-      else aiMsg = `한 사람만 떠올리면 기획이 좁아집니다. <b>주 대상</b>을 먼저 고르고, 같은 공간을 함께 쓰는 사람을 <b>두 명까지</b> 더해 보세요. 목록에 없으면 기타에 적어 주세요.`;
+      else {
+        aiMsg = recs.length
+          ? `${jb(wh, "을", "를")} 자주 쓰는 사람으로 <b>${esc(andList(names(recs, WHO)))}</b>${hasJong(names(recs, WHO).slice(-1)[0]) ? "을" : "를"} 추천합니다. <b>주 대상</b>을 먼저 고르고, 함께 쓰는 사람을 <b>두 명까지</b> 더해 보세요.`
+          : `${wh ? `${jb(wh, "을", "를")} 쓰는 사람을 떠올려 보세요. ` : ""}<b>주 대상</b>을 먼저 고르고, 같은 공간을 함께 쓰는 사람을 <b>두 명까지</b> 더해 보세요. 목록에 없으면 기타에 적어 주세요.`;
+        if (recs.length) aiBtn = `<button class="btn" data-ai="who">AI 추천으로 고르기</button>`;
+      }
     }
     if (id === "where") {
       const recs = recommend("where", T.where);
@@ -157,10 +167,10 @@
       opts = T.where.map((o) => optBtn(o, "where", `<img src="${photo(o.photo)}" alt="" loading="lazy">`, S.where, recs)).join("")
         + etcInput("where", "예: 아파트 단지 앞 공터");
       if (S.where.length) { const w = WHERE[S.where[0]]; aiMsg = `<b>${esc(w.name)}</b>: ${esc(w.issue)}`; }
-      else if (X("where")) aiMsg = `<b>${esc(X("where"))}</b>: 직접 적은 장소입니다. 이곳에서 ${jb(wn, "이", "가")} 겪는 불편을 떠올려 보세요.`;
-      else if (recs.length) aiMsg = `${jb(wn, "이", "가")} 자주 머무는 곳으로 ${jb(andList(names(recs, WHERE)), "을", "를")} 추천합니다. 공공공간을 넓게 보고 골라 보세요.`;
-      else aiMsg = `${jb(wn, "이", "가")} 자주 머무는 곳을 떠올려 보세요. 공공공간을 넓게 보고, 목록에 없으면 기타에 적어 주세요.`;
-      if (!S.where.length && !X("where") && recs.length) aiBtn = `<button class="btn" data-ai="where">AI 추천으로 고르기</button>`;
+      else if (X("where")) aiMsg = `<b>${esc(X("where"))}</b>: 직접 적은 장소입니다. 이곳을 쓰는 사람과 그들이 겪는 불편을 떠올려 보세요.`;
+      else if (recs.length && wn) aiMsg = `${jb(wn, "이", "가")} 자주 머무는 곳으로 ${jb(andList(names(recs, WHERE)), "을", "를")} 추천합니다. 공공공간을 넓게 보고 골라 보세요.`;
+      else aiMsg = `우리 동네에서 바꾸고 싶은 곳을 먼저 고르세요. 다음 단계에서 그곳을 쓰는 사람을 AI가 추천합니다. 목록에 없으면 기타에 적어 주세요.`;
+      if (!S.where.length && !X("where") && recs.length && wn) aiBtn = `<button class="btn" data-ai="where">AI 추천으로 고르기</button>`;
     }
     if (id === "what") {
       const recs = recommend("themes", P.themes);
@@ -268,7 +278,7 @@
     const ai = e.target.closest("[data-ai]");
     if (ai) {
       const k = ai.dataset.ai;
-      if (k === "who") S.who.push(...ampOf().slice(0, 3 - S.who.length));
+      if (k === "who") { if (S.who.length) S.who.push(...ampOf().slice(0, 3 - S.who.length)); else S.who = whoForWhere().slice(0, 1); }
       if (k === "where") { S.where = recommend("where", T.where, 1); S.whereX = ""; }
       if (k === "what") { if (!S.theme.length) S.theme = recommend("themes", P.themes, 1); if (!S.theme.length) S.theme = [P.themes[0].id]; S.issue = [`${S.theme[0]}:${recommendIssue(TH[S.theme[0]])}`]; S.whatX = ""; }
       if (k === "how") S.how = recommend("how", T.how, 1);
@@ -278,7 +288,7 @@
     const act = e.target.closest("[data-act]");
     if (act) {
       const a = act.dataset.act;
-      if (a === "reset") { S = empty(); save(); location.hash = "#/who"; }
+      if (a === "reset") { S = empty(); save(); location.hash = "#/where"; }
       if (a === "print") window.print();
       if (a === "copy") copy(sheetText(), "기획안 글을 복사했습니다");
       if (a === "share") copy(location.href.split("#")[0] + "#/result?" + encode(), "이 기획안 주소를 복사했습니다");
@@ -336,7 +346,7 @@
     const p = plan();
     return [
       `[사업 기획안] ${p.t1} ${p.t2}`, p.one, "",
-      `누구를: ${p.whoAll}`, `어디에: ${p.where.name}`, `무엇을: ${p.th.id ? `${p.th.name} / ` : ""}${p.is.name}`, `어떻게: ${p.how.map((x) => x.name).join(", ")}`, "",
+      `어디에: ${p.where.name}`, `누구를: ${p.whoAll}`, `무엇을: ${p.th.id ? `${p.th.name} / ` : ""}${p.is.name}`, `어떻게: ${p.how.map((x) => x.name).join(", ")}`, "",
       `사업 배경: ${p.is.a}. ${p.is.b}. ${p.where.issue} ${p.w0.need}`, "",
       `디자인 목표: ${p.w0.goal} / ${p.th.desc} / ${p.h0.goal}`, "",
       `공간 구성(AI 제안): ${p.els.map((e) => `${e.name}(${e.desc})`).join(", ")}`, "",
@@ -347,6 +357,16 @@
     ].join("\n");
   }
 
+  // 이미지 프롬프트의 색 문구: 대상지 맥락(where.color)을 바탕으로 전략(how.color)과 대상의 필요를 더한다
+  function colorOf(p) {
+    const base = p.where.color || `${p.where.name} 주변 건물과 가로의 재료색에 어울리는 색`;
+    const add = p.how.map((h) => h.color).filter(Boolean);
+    const ids = p.who.map((w) => w.id);
+    if (["elder", "blind", "wheel"].some((x) => ids.includes(x)) && !p.how.some((h) => h.id === "ud")) add.push("고령자와 저시력자도 알아보게 바닥과 시설물의 명도 대비를 크게");
+    if (["child", "pupil"].some((x) => ids.includes(x)) && !p.how.some((h) => h.id === "play")) add.push("어린이 눈높이의 요소에 밝은 포인트 색");
+    return `${base}을 바탕으로${add.length ? `. ${add.join(", ")}` : ""}. 시설물을 한 가지 색으로 통일하지 않음`;
+  }
+
   function prompts(p) {
     const img = `인천 ${p.where.name}에 조성하는 공공디자인 사업의 완성 투시도를 그려 주세요.
 - 사업명: ${p.t1} ${p.t2}
@@ -354,11 +374,12 @@
 - 공간 구성: ${p.els.map((e) => e.name).join(", ")}
 - 디자인 전략: ${p.how.map((h) => h.name).join(", ")}
 - 분위기: 한국 도시의 실제 가로 맥락, 낮 시간, 사실적인 건축 렌더링, 사람 눈높이, 16:9
-- 색: 차분한 회색과 남색 계열, 간판과 광고물은 넣지 않음`;
+- 색: ${colorOf(p)}
+- 간판과 광고물은 넣지 않음`;
     const doc = `다음 조건으로 인천광역시 공공디자인 사업 기획안을 A4 두 쪽 분량으로 다듬어 주세요. 개조식으로, 사업명, 추진 배경, 대상과 대상지, 디자인 목표, 디자인 전략, 공간 구성, 추진 방식(기획 조사, 설계 제작, 사회실험과 운영), 기대 효과, 관련 부서 순서로 써 주세요. 근거가 없는 수치는 만들지 마세요.
 - 사업명(초안): ${p.t1} ${p.t2}
-- 누구를: ${p.whoAll} / ${p.w0.need}
 - 어디에: ${p.where.name} / ${p.where.issue}
+- 누구를: ${p.whoAll} / ${p.w0.need}
 - 무엇을: ${p.th.id ? `${p.th.name} 주제, ` : ""}${p.is.name} 이슈 / ${p.is.a}. ${p.is.b}.
 - 어떻게: ${p.how.map((h) => `${h.name}(${h.desc})`).join(", ")}
 - 공간 구성(초안, 대상지에 맞게 바꿔도 됨): ${p.els.map((e) => `${e.name}(${e.desc})`).join(", ")}
@@ -371,12 +392,12 @@
     if (!STEPS.every((s) => ready[s.id]())) { const miss = STEPS.find((s) => !ready[s.id]()); location.hash = `#/${miss.id}`; return ""; }
     if (!skipGen) {
       setTimeout(() => { if (location.hash.startsWith("#/result")) { app.innerHTML = resultScreen(true); app.querySelector(".result").scrollTop = 0; } }, matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1500);
-      return `<section class="screen">${progress("result")}<div class="gen"><div class="rings"><i></i><i></i><i></i><i></i><i></i></div><p>AI가 고른 재료로 사업 기획안을 만들고 있습니다</p><small>누구를, 어디에, 무엇을, 어떻게를 하나로 엮고 공간 구성을 제안하는 중</small></div></section>`;
+      return `<section class="screen">${progress("result")}<div class="gen"><div class="rings"><i></i><i></i><i></i><i></i><i></i></div><p>AI가 고른 재료로 사업 기획안을 만들고 있습니다</p><small>어디에, 누구를, 무엇을, 어떻게를 하나로 엮고 공간 구성을 제안하는 중</small></div></section>`;
     }
     const p = plan(), pr = prompts(p);
     const dots = [
-      ["누구를", p.whoAll, pic(p.w0)],
       ["어디에", p.where.name, pic(p.where)],
+      ["누구를", p.whoAll, pic(p.w0)],
       ["무엇을", p.is.name, pic(p.meta)],
       ["어떻게", p.how.map((h) => h.name).join(", "), pic(p.h0)],
     ];
@@ -437,7 +458,7 @@
   // ---------- 소개, 사례, 참고 자료 ----------
   function intro() {
     const loop = [
-      ["누구를", photo("elder")], ["어디에", photo("frontyard")], ["무엇을", photo("t-safety")],
+      ["어디에", photo("frontyard")], ["누구를", photo("elder")], ["무엇을", photo("t-safety")],
       ["어떻게", photo("nudge")], ["기획안", null, "doc"],
     ];
     const last = loop.length - 1;
@@ -445,8 +466,8 @@
       <div>
         <p class="kicker">Public Design AI Toolkit for Incheon</p>
         <h1>공공디자인<br>AI 툴킷 <span>for 인천</span></h1>
-        <p class="lead">인천 시민 디자인 워크숍을 위한 협력 툴킷입니다. 키오스크에서 메뉴를 고르듯 누구를 위해, 어디에, 무엇을, 어떻게를 차례로 고르면, AI 도우미가 단계마다 선택지를 넓혀 주고 마지막에 하나의 사업 기획안으로 엮어 줍니다. 목록에 없는 것은 단계마다 기타 칸에 직접 적을 수 있습니다.</p>
-        <div class="acts"><a class="btn fill" href="#/who">툴킷 시작하기 ›</a><a class="link" href="#/cases">사례로 먼저 보기</a></div>
+        <p class="lead">인천 시민 디자인 워크숍을 위한 협력 툴킷입니다. 키오스크에서 메뉴를 고르듯 어디에, 누구를 위해, 무엇을, 어떻게를 차례로 고르면, AI 도우미가 단계마다 선택지를 넓혀 주고 마지막에 하나의 사업 기획안으로 엮어 줍니다. 목록에 없는 것은 단계마다 기타 칸에 직접 적을 수 있습니다.</p>
+        <div class="acts"><a class="btn fill" href="#/where">툴킷 시작하기 ›</a><a class="link" href="#/cases">사례로 먼저 보기</a></div>
         <p class="note">인천광역시 공공디자인 진흥계획 6개 주제, 공공팔레트 모델의 Where, Who, What, How 구조를 바탕으로 시연용 1차 판이며, AI 추천은 규칙 기반 시연입니다.</p>
       </div>
       <div class="loop">${loop.map(([n, img, ic], i) => `<div class="opt ${i === last ? "last" : ""}"><span class="dot">${img ? `<img src="${img}" alt="">` : svg(ic)}</span><span class="nm">${i < last ? `Step ${i + 1} ` : ""}${n}</span></div>`).join("")}</div>
@@ -465,7 +486,7 @@
       <p class="lead">미리 만들어 둔 조합입니다. 누르면 해당 기획안이 열리고, 단계로 돌아가 바꿔 볼 수 있습니다.</p>
       <div class="cases">${T.cases.map((c, i) => {
         const p = planOf(fill(c.s));
-        return `<button class="case" data-act="case" data-i="${i}"><span class="stack"><img src="${photo(p.w0.photo)}" alt=""><img src="${photo(p.where.photo)}" alt=""><img src="${photo(p.h0.photo)}" alt=""></span>
+        return `<button class="case" data-act="case" data-i="${i}"><span class="stack"><img src="${photo(p.where.photo)}" alt=""><img src="${photo(p.w0.photo)}" alt=""><img src="${photo(p.h0.photo)}" alt=""></span>
           <span><b>${esc(`${p.t1} ${p.t2}`)}</b><span>${esc(c.note)}</span></span></button>`;
       }).join("")}</div>
     </div></div></section>`;
